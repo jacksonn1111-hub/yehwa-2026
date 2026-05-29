@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>☕ 카페 주문 관리</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', sans-serif; background: #f5f3f0; color: #2d2d2d; -webkit-font-smoothing: antialiased; padding-bottom: 40px; }
+.header { background: linear-gradient(135deg, #6b4c3b 0%, #8b5e3c 50%, #a67c5b 100%); padding: 28px 20px 22px; text-align: center; }
+.header h1 { font-size: 20px; font-weight: 800; color: #fff; }
+.header p { font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 5px; }
+.setup-card { background: #fff; border-radius: 16px; padding: 20px; margin: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04); }
+.setup-card h3 { font-size: 16px; font-weight: 700; color: #6b4c3b; margin-bottom: 12px; }
+.setup-card label { font-size: 13px; font-weight: 600; color: #444; display: block; margin-bottom: 6px; }
+.setup-card input, .setup-card textarea { width: 100%; padding: 10px 12px; border: 2px solid #e8e4df; border-radius: 10px; font-size: 13px; font-family: inherit; color: #333; background: #faf9f7; margin-bottom: 12px; }
+.setup-card textarea { height: 80px; resize: vertical; }
+.setup-card input:focus, .setup-card textarea:focus { outline: none; border-color: #8b5e3c; background: #fff; }
+.setup-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #6b4c3b, #8b5e3c); color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.setup-btn:active { transform: scale(0.98); }
+.setup-help { font-size: 11px; color: #999; line-height: 1.6; margin-bottom: 8px; }
+.setup-help code { background: #f0ede8; padding: 1px 5px; border-radius: 3px; font-size: 11px; }
+.step-box { background: #f8f6f3; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+.step-box h4 { font-size: 13px; font-weight: 700; color: #6b4c3b; margin-bottom: 6px; }
+.step-box p { font-size: 12px; color: #666; line-height: 1.7; }
+.dashboard { display: none; }
+.stats-row { display: flex; gap: 10px; padding: 16px; }
+.stat-box { flex: 1; background: #fff; border-radius: 14px; padding: 16px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+.stat-num { font-size: 28px; font-weight: 800; color: #6b4c3b; }
+.stat-label { font-size: 11px; color: #999; margin-top: 4px; font-weight: 500; }
+.stat-box.alert .stat-num { color: #ef4444; }
+.tab-nav { display: flex; background: #fff; border-bottom: 2px solid #e8e4df; position: sticky; top: 0; z-index: 100; }
+.tab-btn { flex: 1; padding: 12px 6px; font-size: 13px; font-weight: 600; color: #999; background: none; border: none; cursor: pointer; position: relative; font-family: inherit; }
+.tab-btn.active { color: #6b4c3b; }
+.tab-btn.active::after { content: ''; position: absolute; bottom: -2px; left: 15%; width: 70%; height: 3px; background: #8b5e3c; border-radius: 2px; }
+.tab-content { display: none; animation: fadeIn 0.3s; }
+.tab-content.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.section { padding: 16px; }
+.section-title { font-size: 14px; font-weight: 700; color: #6b4c3b; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+.section-title .badge { background: #6b4c3b; color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+.order-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: #fff; border-radius: 10px; margin-bottom: 6px; font-size: 13px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.order-item .name { font-weight: 600; color: #333; min-width: 50px; }
+.order-item .menu { color: #666; flex: 1; text-align: center; }
+.order-item .temp { font-size: 11px; padding: 2px 8px; border-radius: 6px; font-weight: 600; }
+.order-item .temp.ICE { background: #dbeafe; color: #1e40af; }
+.order-item .temp.HOT { background: #fee2e2; color: #b91c1c; }
+.menu-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #fff; border-radius: 10px; margin-bottom: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.menu-bar .menu-name { font-size: 13px; font-weight: 600; color: #333; min-width: 120px; }
+.menu-bar .bar-wrap { flex: 1; height: 24px; background: #f0ede8; border-radius: 6px; overflow: hidden; }
+.menu-bar .bar-fill { height: 100%; background: linear-gradient(90deg, #8b5e3c, #c4753b); border-radius: 6px; transition: width 0.5s; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; }
+.menu-bar .bar-count { font-size: 11px; font-weight: 700; color: #fff; }
+.menu-bar .count-label { font-size: 13px; font-weight: 700; color: #6b4c3b; min-width: 30px; text-align: right; }
+.person-chip { display: inline-block; padding: 6px 14px; background: #fff; border-radius: 20px; font-size: 13px; font-weight: 500; margin: 3px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.person-chip.ordered { color: #2d6a4f; border: 1px solid #bbf7d0; background: #f0fdf4; }
+.person-chip.not-ordered { color: #ef4444; border: 1px solid #fecaca; background: #fef2f2; }
+.refresh-btn { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 16px; padding: 12px; background: #fff; border: 2px solid #e8e4df; border-radius: 12px; font-size: 14px; font-weight: 600; color: #6b4c3b; cursor: pointer; font-family: inherit; }
+.refresh-btn:active { background: #f8f6f3; }
+.loading { text-align: center; padding: 40px; color: #999; font-size: 14px; }
+.error-msg { text-align: center; padding: 20px; color: #ef4444; font-size: 13px; background: #fef2f2; border-radius: 10px; margin: 16px; line-height: 1.7; }
+.settings-btn { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0 16px; padding: 10px; background: none; border: 1px dashed #ddd; border-radius: 10px; font-size: 12px; color: #aaa; cursor: pointer; font-family: inherit; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>☕ 카페 주문 관리</h1>
+  <p>2026 예산예화여자고등학교 연찬회</p>
+</div>
+
+<div id="setupSection">
+  <div class="setup-card">
+    <h3>🔧 초기 설정</h3>
+
+    <div class="step-box">
+      <h4>📌 Step 1. Google Sheets 공유 설정</h4>
+      <p>
+        스프레드시트 열기 →<br>
+        ① <strong>우측 상단 "공유" 버튼</strong> 클릭<br>
+        ② "일반 액세스"를 <strong>"링크가 있는 모든 사용자"</strong>로 변경<br>
+        ③ 권한: <strong>"뷰어"</strong> 확인 → 완료
+      </p>
+    </div>
+
+    <div class="step-box">
+      <h4>📌 Step 2. 웹에 게시</h4>
+      <p>
+        스프레드시트에서<br>
+        ① <strong>파일 → 공유 → 웹에 게시</strong> 클릭<br>
+        ② "전체 문서" + "웹 페이지" 그대로 → <strong>게시</strong> 클릭
+      </p>
+    </div>
+
+    <label>Google Sheets 스프레드시트 ID</label>
+    <div class="setup-help">
+      아래 ID가 이미 입력되어 있어요. 그대로 두시면 됩니다.
+    </div>
+    <input type="text" id="sheetId" value="1spNpTWxPQZQT56ZP3OZ0YLceW1h6VinyLeVVho9rkGQ">
+
+    <label>교직원 명단 (한 줄에 한 명씩)</label>
+    <div class="setup-help">
+      주문 여부 확인용. 카페 주문 시 입력하는 이름과 동일하게 입력해주세요.
+    </div>
+    <textarea id="staffList" placeholder="김정호&#10;이영희&#10;박민수&#10;최수진"></textarea>
+
+    <button class="setup-btn" onclick="startDashboard()">대시보드 시작</button>
+  </div>
+</div>
+
+<div id="dashboardSection" class="dashboard">
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-num" id="totalOrders">-</div><div class="stat-label">총 주문</div></div>
+    <div class="stat-box"><div class="stat-num" id="totalStaff">-</div><div class="stat-label">전체 인원</div></div>
+    <div class="stat-box alert"><div class="stat-num" id="notOrdered">-</div><div class="stat-label">미주문</div></div>
+  </div>
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchDashTab('orders')">📋 주문</button>
+    <button class="tab-btn" onclick="switchDashTab('summary')">📊 집계</button>
+    <button class="tab-btn" onclick="switchDashTab('status')">✅ 현황</button>
+  </div>
+  <div class="tab-content active" id="dash-orders">
+    <div class="section">
+      <div class="section-title">📋 전체 주문 목록 <span class="badge" id="orderBadge">0</span></div>
+      <div id="orderListContainer"><div class="loading">로딩 중...</div></div>
+    </div>
+  </div>
+  <div class="tab-content" id="dash-summary">
+    <div class="section">
+      <div class="section-title">📊 메뉴별 주문 수량</div>
+      <div id="menuSummaryContainer"><div class="loading">로딩 중...</div></div>
+    </div>
+  </div>
+  <div class="tab-content" id="dash-status">
+    <div class="section">
+      <div class="section-title" style="color:#2d6a4f;">✅ 주문 완료 <span class="badge" id="orderedBadge" style="background:#2d6a4f;">0</span></div>
+      <div id="orderedList"></div>
+    </div>
+    <div class="section">
+      <div class="section-title" style="color:#ef4444;">❌ 미주문 <span class="badge" id="notOrderedBadge" style="background:#ef4444;">0</span></div>
+      <div id="notOrderedList"></div>
+    </div>
+  </div>
+  <button class="refresh-btn" onclick="fetchData()">🔄 새로고침</button>
+  <div style="text-align:center; font-size:11px; color:#ccc; margin-top:8px;" id="lastUpdate"></div>
+  <button class="settings-btn" onclick="showSetup()">⚙️ 설정 변경</button>
+</div>
+
+<script>
+let sheetId = '';
+let staffNames = [];
+let orders = [];
+
+// Load saved settings
+try {
+  const savedId = localStorage.getItem('cafe_sheet_id');
+  const savedStaff = localStorage.getItem('cafe_staff');
+  if (savedId) document.getElementById('sheetId').value = savedId;
+  if (savedStaff) document.getElementById('staffList').value = JSON.parse(savedStaff).join('\n');
+} catch(e) {}
+
+function showSetup() {
+  document.getElementById('setupSection').style.display = 'block';
+  document.getElementById('dashboardSection').style.display = 'none';
+}
+
+function startDashboard() {
+  sheetId = document.getElementById('sheetId').value.trim();
+  const staffText = document.getElementById('staffList').value.trim();
+  if (!sheetId) { alert('스프레드시트 ID를 입력해주세요.'); return; }
+  staffNames = staffText ? staffText.split('\n').map(s => s.trim()).filter(s => s) : [];
+  try {
+    localStorage.setItem('cafe_sheet_id', sheetId);
+    localStorage.setItem('cafe_staff', JSON.stringify(staffNames));
+  } catch(e) {}
+  document.getElementById('setupSection').style.display = 'none';
+  document.getElementById('dashboardSection').style.display = 'block';
+  fetchData();
+}
+
+function switchDashTab(tab) {
+  document.querySelectorAll('#dashboardSection .tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('#dashboardSection .tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('dash-' + tab).classList.add('active');
+  event.target.classList.add('active');
+}
+
+async function fetchData() {
+  document.getElementById('orderListContainer').innerHTML = '<div class="loading">🔄 데이터 불러오는 중...</div>';
+
+  // Try multiple URL formats
+  const urls = [
+    `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`,
+    `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=설문지 응답 1`,
+    `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`,
+  ];
+
+  let csv = null;
+  for (const url of urls) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        const text = await res.text();
+        if (text && text.includes(',') && !text.includes('<!DOCTYPE')) {
+          csv = text;
+          break;
+        }
+      }
+    } catch(e) { continue; }
+  }
+
+  if (!csv) {
+    document.getElementById('orderListContainer').innerHTML =
+      `<div class="error-msg">
+        ❌ 데이터를 불러올 수 없습니다.<br><br>
+        <strong>확인해주세요:</strong><br><br>
+        1️⃣ 스프레드시트 <strong>공유 버튼</strong> → "링크가 있는 모든 사용자"로 변경<br><br>
+        2️⃣ <strong>파일 → 공유 → 웹에 게시</strong> → 게시 완료<br><br>
+        두 가지 모두 해야 작동합니다!
+      </div>`;
+    return;
+  }
+
+  orders = parseCSV(csv);
+  renderAll();
+  document.getElementById('lastUpdate').textContent =
+    '마지막 업데이트: ' + new Date().toLocaleTimeString('ko-KR');
+}
+
+function parseCSV(csv) {
+  const lines = csv.split('\n').filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const result = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = parseCSVLine(lines[i]);
+    if (cols.length >= 4) {
+      result.push({
+        timestamp: cols[0] || '',
+        name: (cols[1] || '').trim(),
+        temp: (cols[2] || '').trim(),
+        menu: (cols[3] || '').trim(),
+        size: (cols[4] || 'R').trim()
+      });
+    }
+  }
+  return result;
+}
+
+function parseCSVLine(line) {
+  const result = []; let current = ''; let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { if (inQ && line[i+1] === '"') { current += '"'; i++; } else { inQ = !inQ; } }
+    else if (c === ',' && !inQ) { result.push(current); current = ''; }
+    else { current += c; }
+  }
+  result.push(current);
+  return result.map(s => s.replace(/^"|"$/g, ''));
+}
+
+function renderAll() {
+  const orderedNames = [...new Set(orders.map(o => o.name))];
+  const notOrderedNames = staffNames.filter(n => !orderedNames.includes(n));
+  document.getElementById('totalOrders').textContent = orders.length;
+  document.getElementById('totalStaff').textContent = staffNames.length || '-';
+  document.getElementById('notOrdered').textContent = staffNames.length ? notOrderedNames.length : '-';
+
+  // Order list
+  document.getElementById('orderBadge').textContent = orders.length;
+  document.getElementById('orderListContainer').innerHTML = orders.length === 0
+    ? '<div class="loading">아직 주문이 없습니다</div>'
+    : orders.map(o =>
+      `<div class="order-item"><span class="name">${o.name}</span><span class="menu">${o.menu} (${o.size})</span><span class="temp ${o.temp}">${o.temp === 'ICE' ? '🧊 ICE' : '🔥 HOT'}</span></div>`
+    ).reverse().join('');
+
+  // Menu summary
+  const mc = {};
+  orders.forEach(o => { const k = `${o.temp} ${o.menu} (${o.size})`; mc[k] = (mc[k]||0)+1; });
+  const sorted = Object.entries(mc).sort((a,b) => b[1]-a[1]);
+  const max = sorted.length ? sorted[0][1] : 1;
+  document.getElementById('menuSummaryContainer').innerHTML = sorted.length === 0
+    ? '<div class="loading">아직 주문이 없습니다</div>'
+    : sorted.map(([m,c]) =>
+      `<div class="menu-bar"><span class="menu-name">${m}</span><div class="bar-wrap"><div class="bar-fill" style="width:${c/max*100}%"><span class="bar-count">${c}</span></div></div><span class="count-label">${c}잔</span></div>`
+    ).join('');
+
+  // Status
+  document.getElementById('orderedBadge').textContent = orderedNames.length;
+  document.getElementById('orderedList').innerHTML = orderedNames.length
+    ? orderedNames.map(n => `<span class="person-chip ordered">✅ ${n}</span>`).join('')
+    : '<div class="loading">아직 주문한 사람이 없습니다</div>';
+  if (staffNames.length) {
+    document.getElementById('notOrderedBadge').textContent = notOrderedNames.length;
+    document.getElementById('notOrderedList').innerHTML = notOrderedNames.length
+      ? notOrderedNames.map(n => `<span class="person-chip not-ordered">❌ ${n}</span>`).join('')
+      : '<div style="text-align:center;padding:20px;color:#2d6a4f;font-size:14px;font-weight:600;">🎉 전원 주문 완료!</div>';
+  } else {
+    document.getElementById('notOrderedBadge').textContent = '-';
+    document.getElementById('notOrderedList').innerHTML = '<div class="loading">교직원 명단이 없어 미주문자를 확인할 수 없습니다</div>';
+  }
+}
+
+setInterval(() => {
+  if (document.getElementById('dashboardSection').style.display === 'block') fetchData();
+}, 30000);
+</script>
+</body>
+</html>
