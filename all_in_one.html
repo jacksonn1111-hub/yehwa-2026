@@ -584,18 +584,18 @@ body {
           <div class="time">10:20 ~ 10:30</div>
           <div class="activity">🚝 모노레일 이동</div>
         </div>
-        <div class="time-item highlight" data-day="4" data-start="10:30" data-end="12:00">
-          <div class="time">10:30 ~ 12:00</div>
+        <div class="time-item highlight" data-day="4" data-start="10:30" data-end="12:20">
+          <div class="time">10:30 ~ 12:20</div>
           <div class="activity">🌲 화담숲 관람</div>
           <div class="detail">모노레일(1→2구간) 이용 및 화담숲 관람</div>
         </div>
-        <div class="time-item" data-day="4" data-start="12:00" data-end="13:30">
-          <div class="time">12:00 ~ 13:30</div>
+        <div class="time-item" data-day="4" data-start="12:30" data-end="14:00">
+          <div class="time">12:30 ~ 14:00</div>
           <div class="activity">🚌 평택 이동</div>
           <div class="detail">곤지암리조트 → 평택 (버스)</div>
         </div>
-        <div class="time-item highlight" data-day="4" data-start="13:30" data-end="14:30">
-          <div class="time">13:30 ~ 14:30</div>
+        <div class="time-item highlight" data-day="4" data-start="15:30" data-end="16:30">
+          <div class="time">15:30 ~ 16:30</div>
           <div class="activity">🍽️ 점심 & ☕ 카페</div>
           <div class="detail">진돗가비 불쭈꾸미 + 투썸플레이스</div>
         </div>
@@ -980,37 +980,16 @@ body {
         </div>
         <div class="form-group">
           <label>메뉴 선택</label>
-          <select id="menuSelect">
+          <select id="menuSelect" onchange="onMenuChange()">
             <option value="">-- 메뉴를 선택해주세요 --</option>
-            <optgroup label="☕ 커피">
-              <option value="아메리카노">아메리카노</option>
-              <option value="카페라떼">카페라떼</option>
-              <option value="바닐라 카라멜 마끼아또">바닐라 카라멜 마끼아또</option>
-              <option value="카페모카">카페모카</option>
-              <option value="화이트 초콜릿 모카">화이트 초콜릿 모카</option>
-              <option value="콜드브루">콜드브루</option>
-              <option value="스페니쉬 연유라떼">스페니쉬 연유라떼</option>
-            </optgroup>
-            <optgroup label="🍹 논커피 음료">
-              <option value="초콜릿 라떼">초콜릿 라떼</option>
-              <option value="녹차 라떼">녹차 라떼</option>
-              <option value="딸기 라떼">딸기 라떼</option>
-              <option value="레몬 에이드">레몬 에이드</option>
-              <option value="자몽 에이드">자몽 에이드</option>
-            </optgroup>
-            <optgroup label="🫖 티 (따뜻한 음료 추천)">
-              <option value="로얄 밀크티">로얄 밀크티</option>
-              <option value="얼그레이">얼그레이</option>
-              <option value="캐모마일">캐모마일</option>
-            </optgroup>
           </select>
         </div>
-        <div class="form-group">
+        <div class="form-group" id="sizeGroup">
           <label>사이즈</label>
-          <div class="size-toggle">
-            <button class="size-btn active" onclick="selectSize('R')">Regular (R)</button>
-            <button class="size-btn" onclick="selectSize('L')">Large (L) +500원</button>
-          </div>
+          <div class="size-toggle" id="sizeToggle"></div>
+        </div>
+        <div id="priceDisplay" style="text-align:right; font-size:18px; font-weight:800; color:#6b4c3b; margin:8px 0 12px; display:none;">
+          <span id="priceAmount"></span>
         </div>
         <button class="submit-btn" id="submitBtn" onclick="submitOrder()">주문 제출하기</button>
         <div class="order-list" id="orderList" style="display:none;">
@@ -1122,43 +1101,134 @@ const ENTRY_TEMP = 'entry.950675004';
 const ENTRY_MENU = 'entry.126222510';
 const ENTRY_SIZE = 'entry.811791968';
 
-let selectedTemp = 'ice', selectedSize = 'R', orders = [];
+const MENU_DATA = [
+  { cat: '☕ 커피', items: [
+    { name: '아메리카노', R: 4700, L: 5300 },
+    { name: '카페라떼', R: 5200, L: 5800 },
+    { name: '카푸치노', R: 5200, L: 5800 },
+    { name: '바닐라라떼', R: 5700, L: 6300 },
+    { name: '카페모카', R: 5700, L: 6300 },
+    { name: '카라멜 마키아또', R: 6100, L: 6700 },
+    { name: '아샷추', R: 5700 },
+  ]},
+  { cat: '🍵 말차 · 논커피', items: [
+    { name: '말차크림라떼', R: 5000, L: 5600 },
+    { name: '초콜릿 라떼', R: 5600, L: 6200 },
+    { name: '현미 미숫가루', R: 6200, L: 6800 },
+  ]},
+  { cat: '🍋 에이드', items: [
+    { name: '레몬 에이드', L: 5800 },
+    { name: '자몽 에이드', L: 6300 },
+    { name: '복숭아 에이드', L: 6300 },
+    { name: '오렌지 에이드', L: 6300 },
+  ]},
+  { cat: '🫖 티', items: [
+    { name: '애플민트티', L: 6300 },
+    { name: '허니레몬티', L: 6300 },
+    { name: '얼그레이티', L: 5300 },
+    { name: '카모마일티', L: 5300 },
+    { name: '그나와 민트티', L: 5300 },
+  ]},
+];
+
+let selectedTemp = 'ice', selectedSize = '', selectedPrice = 0, orders = [];
+let menuMap = {};
+
+function initMenu() {
+  const sel = document.getElementById('menuSelect');
+  MENU_DATA.forEach(cat => {
+    const og = document.createElement('optgroup');
+    og.label = cat.cat;
+    cat.items.forEach(item => {
+      const sizes = [];
+      if (item.R) sizes.push('R');
+      if (item.L) sizes.push('L');
+      const priceStr = sizes.map(s => `${s} ${(item[s]/1000).toFixed(1).replace('.0','')}천`).join(' / ');
+      const opt = document.createElement('option');
+      opt.value = item.name;
+      opt.textContent = `${item.name}  (${priceStr})`;
+      og.appendChild(opt);
+      menuMap[item.name] = item;
+    });
+    sel.appendChild(og);
+  });
+}
+initMenu();
+
+function onMenuChange() {
+  const name = document.getElementById('menuSelect').value;
+  const sizeGroup = document.getElementById('sizeGroup');
+  const priceDisp = document.getElementById('priceDisplay');
+  if (!name) {
+    sizeGroup.style.display = 'none';
+    priceDisp.style.display = 'none';
+    selectedSize = '';
+    return;
+  }
+  const item = menuMap[name];
+  const hasR = !!item.R, hasL = !!item.L;
+  sizeGroup.style.display = 'block';
+  const toggle = document.getElementById('sizeToggle');
+  toggle.innerHTML = '';
+  if (hasR && hasL) {
+    toggle.innerHTML = `
+      <button class="size-btn active" onclick="selectSize('R',${item.R})">R ${item.R.toLocaleString()}원</button>
+      <button class="size-btn" onclick="selectSize('L',${item.L})">L ${item.L.toLocaleString()}원</button>`;
+    selectedSize = 'R'; selectedPrice = item.R;
+  } else if (hasR) {
+    toggle.innerHTML = `<button class="size-btn active" onclick="selectSize('R',${item.R})">R ${item.R.toLocaleString()}원</button>`;
+    selectedSize = 'R'; selectedPrice = item.R;
+  } else if (hasL) {
+    toggle.innerHTML = `<button class="size-btn active" onclick="selectSize('L',${item.L})">L ${item.L.toLocaleString()}원</button>`;
+    selectedSize = 'L'; selectedPrice = item.L;
+  }
+  priceDisp.style.display = 'block';
+  document.getElementById('priceAmount').textContent = selectedPrice.toLocaleString() + '원';
+}
 
 function selectTemp(temp) {
   selectedTemp = temp;
   document.querySelectorAll('.temp-btn').forEach(b => b.classList.remove('active'));
   document.querySelector('.temp-btn.' + temp).classList.add('active');
 }
-function selectSize(size) {
+function selectSize(size, price) {
   selectedSize = size;
+  selectedPrice = price;
   document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
   event.target.classList.add('active');
+  document.getElementById('priceAmount').textContent = price.toLocaleString() + '원';
+  document.getElementById('priceDisplay').style.display = 'block';
 }
+
 function submitOrder() {
   const name = document.getElementById('orderName').value.trim();
   const menu = document.getElementById('menuSelect').value;
   if (!name) { alert('이름을 입력해주세요.'); return; }
   if (!menu) { alert('메뉴를 선택해주세요.'); return; }
+  if (!selectedSize) { alert('사이즈를 선택해주세요.'); return; }
   const tempLabel = selectedTemp === 'ice' ? 'ICE' : 'HOT';
   const btn = document.getElementById('submitBtn');
   btn.disabled = true; btn.textContent = '제출 중...';
+  // Send menu name with size for Google Form
+  const menuWithSize = `${menu}(${selectedSize})`;
   if (GOOGLE_FORM_URL) {
     const fd = new URLSearchParams();
     fd.append(ENTRY_NAME, name); fd.append(ENTRY_TEMP, tempLabel);
-    fd.append(ENTRY_MENU, menu); fd.append(ENTRY_SIZE, selectedSize);
+    fd.append(ENTRY_MENU, menuWithSize); fd.append(ENTRY_SIZE, selectedSize);
     fetch(GOOGLE_FORM_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:fd.toString() })
       .then(() => afterSubmit(name, menu, tempLabel)).catch(() => afterSubmit(name, menu, tempLabel));
   } else { afterSubmit(name, menu, tempLabel); }
 }
 function afterSubmit(name, menu, tempLabel) {
-  orders.push({ name, menu, size: selectedSize, temp: selectedTemp, tempLabel });
+  orders.push({ name, menu, size: selectedSize, temp: selectedTemp, tempLabel, price: selectedPrice });
   renderOrders(); showToast();
   document.getElementById('submitBtn').disabled = false;
   document.getElementById('submitBtn').textContent = '주문 제출하기';
   document.getElementById('orderName').value = '';
   document.getElementById('menuSelect').value = '';
-  selectedSize = 'R'; selectedTemp = 'ice';
-  document.querySelectorAll('.size-btn').forEach((b,i) => b.classList.toggle('active', i===0));
+  document.getElementById('sizeGroup').style.display = 'none';
+  document.getElementById('priceDisplay').style.display = 'none';
+  selectedSize = ''; selectedPrice = 0; selectedTemp = 'ice';
   document.querySelectorAll('.temp-btn').forEach(b => b.classList.remove('active'));
   document.querySelector('.temp-btn.ice').classList.add('active');
 }
@@ -1166,7 +1236,7 @@ function renderOrders() {
   document.getElementById('orderList').style.display = 'block';
   document.getElementById('orderCount').textContent = orders.length;
   document.getElementById('orderEntries').innerHTML = orders.map(o =>
-    `<div class="order-entry"><span class="order-name">${o.name}</span><span class="order-menu">${o.menu} (${o.size})</span><span class="order-temp ${o.temp}">${o.temp==='ice'?'🧊 ICE':'🔥 HOT'}</span></div>`
+    `<div class="order-entry"><span class="order-name">${o.name}</span><span class="order-menu">${o.menu} (${o.size}) ${o.price?o.price.toLocaleString()+'원':''}</span><span class="order-temp ${o.temp}">${o.temp==='ice'?'🧊 ICE':'🔥 HOT'}</span></div>`
   ).reverse().join('');
 }
 function showToast() {
