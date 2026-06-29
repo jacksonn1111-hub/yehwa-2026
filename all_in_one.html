@@ -1201,11 +1201,11 @@ function submitOrder() {
   const btn = document.getElementById('submitBtn');
   btn.disabled = true; btn.textContent = '제출 중...';
   // Send menu name with size for Google Form
-  const menuWithSize = `${menu}(${selectedSize})`;
+  // 메뉴명만 전송 (사이즈는 별도 컬럼)
   if (GOOGLE_FORM_URL) {
     const fd = new URLSearchParams();
     fd.append(ENTRY_NAME, name); fd.append(ENTRY_TEMP, tempLabel);
-    fd.append(ENTRY_MENU, menuWithSize); fd.append(ENTRY_SIZE, selectedSize);
+    fd.append(ENTRY_MENU, menu); fd.append(ENTRY_SIZE, selectedSize);
     fetch(GOOGLE_FORM_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:fd.toString() })
       .then(() => afterSubmit(name, menu, tempLabel)).catch(() => afterSubmit(name, menu, tempLabel));
   } else { afterSubmit(name, menu, tempLabel); }
