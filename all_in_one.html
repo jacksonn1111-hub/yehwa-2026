@@ -988,9 +988,7 @@ body {
           <label>사이즈</label>
           <div class="size-toggle" id="sizeToggle"></div>
         </div>
-        <div id="priceDisplay" style="text-align:right; font-size:18px; font-weight:800; color:#6b4c3b; margin:8px 0 12px; display:none;">
-          <span id="priceAmount"></span>
-        </div>
+
         <button class="submit-btn" id="submitBtn" onclick="submitOrder()">주문 제출하기</button>
         <div class="order-list" id="orderList" style="display:none;">
           <h4>📋 제출된 주문 <span class="count" id="orderCount">0</span></h4>
@@ -1143,10 +1141,9 @@ function initMenu() {
       const sizes = [];
       if (item.R) sizes.push('R');
       if (item.L) sizes.push('L');
-      const priceStr = sizes.map(s => `${s} ${(item[s]/1000).toFixed(1).replace('.0','')}천`).join(' / ');
       const opt = document.createElement('option');
       opt.value = item.name;
-      opt.textContent = `${item.name}  (${priceStr})`;
+      opt.textContent = item.name;
       og.appendChild(opt);
       menuMap[item.name] = item;
     });
@@ -1158,10 +1155,9 @@ initMenu();
 function onMenuChange() {
   const name = document.getElementById('menuSelect').value;
   const sizeGroup = document.getElementById('sizeGroup');
-  const priceDisp = document.getElementById('priceDisplay');
+  
   if (!name) {
     sizeGroup.style.display = 'none';
-    priceDisp.style.display = 'none';
     selectedSize = '';
     return;
   }
@@ -1172,18 +1168,16 @@ function onMenuChange() {
   toggle.innerHTML = '';
   if (hasR && hasL) {
     toggle.innerHTML = `
-      <button class="size-btn active" onclick="selectSize('R',${item.R})">R ${item.R.toLocaleString()}원</button>
-      <button class="size-btn" onclick="selectSize('L',${item.L})">L ${item.L.toLocaleString()}원</button>`;
-    selectedSize = 'R'; selectedPrice = item.R;
+      <button class="size-btn active" onclick="selectSize('R')">Regular (R)</button>
+      <button class="size-btn" onclick="selectSize('L')">Large (L)</button>`;
+    selectedSize = 'R';
   } else if (hasR) {
-    toggle.innerHTML = `<button class="size-btn active" onclick="selectSize('R',${item.R})">R ${item.R.toLocaleString()}원</button>`;
-    selectedSize = 'R'; selectedPrice = item.R;
+    toggle.innerHTML = `<button class="size-btn active" onclick="selectSize('R')">Regular (R)</button>`;
+    selectedSize = 'R';
   } else if (hasL) {
-    toggle.innerHTML = `<button class="size-btn active" onclick="selectSize('L',${item.L})">L ${item.L.toLocaleString()}원</button>`;
-    selectedSize = 'L'; selectedPrice = item.L;
+    toggle.innerHTML = `<button class="size-btn active" onclick="selectSize('L')">Large (L)</button>`;
+    selectedSize = 'L';
   }
-  priceDisp.style.display = 'block';
-  document.getElementById('priceAmount').textContent = selectedPrice.toLocaleString() + '원';
 }
 
 function selectTemp(temp) {
@@ -1191,13 +1185,10 @@ function selectTemp(temp) {
   document.querySelectorAll('.temp-btn').forEach(b => b.classList.remove('active'));
   document.querySelector('.temp-btn.' + temp).classList.add('active');
 }
-function selectSize(size, price) {
+function selectSize(size) {
   selectedSize = size;
-  selectedPrice = price;
   document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
   event.target.classList.add('active');
-  document.getElementById('priceAmount').textContent = price.toLocaleString() + '원';
-  document.getElementById('priceDisplay').style.display = 'block';
 }
 
 function submitOrder() {
@@ -1227,7 +1218,6 @@ function afterSubmit(name, menu, tempLabel) {
   document.getElementById('orderName').value = '';
   document.getElementById('menuSelect').value = '';
   document.getElementById('sizeGroup').style.display = 'none';
-  document.getElementById('priceDisplay').style.display = 'none';
   selectedSize = ''; selectedPrice = 0; selectedTemp = 'ice';
   document.querySelectorAll('.temp-btn').forEach(b => b.classList.remove('active'));
   document.querySelector('.temp-btn.ice').classList.add('active');
@@ -1236,7 +1226,7 @@ function renderOrders() {
   document.getElementById('orderList').style.display = 'block';
   document.getElementById('orderCount').textContent = orders.length;
   document.getElementById('orderEntries').innerHTML = orders.map(o =>
-    `<div class="order-entry"><span class="order-name">${o.name}</span><span class="order-menu">${o.menu} (${o.size}) ${o.price?o.price.toLocaleString()+'원':''}</span><span class="order-temp ${o.temp}">${o.temp==='ice'?'🧊 ICE':'🔥 HOT'}</span></div>`
+    `<div class="order-entry"><span class="order-name">${o.name}</span><span class="order-menu">${o.menu} (${o.size})</span><span class="order-temp ${o.temp}">${o.temp==='ice'?'🧊 ICE':'🔥 HOT'}</span></div>`
   ).reverse().join('');
 }
 function showToast() {
